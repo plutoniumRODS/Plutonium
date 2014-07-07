@@ -4,7 +4,7 @@ Plutonium Specifications:
 
     X13 algorithm
     ~110k Coin Proof-of-Work (PoW) Maximum*
-    0.1% Premine
+    0.9% Premine
     6 Day Maximum Proof-of-Work (PoW) Mining Phase*
     Difficulty retargets every block - nothing silly to interfere with the Proof-of-Stake (PoS) implementation
     9.4% Proof-of-Stake (PoS)*
