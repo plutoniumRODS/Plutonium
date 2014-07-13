@@ -2030,6 +2030,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     if (IsProofOfStake() && !CheckCoinStakeTimestamp(GetBlockTime(), (int64)vtx[1].nTime))
         return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%"PRI64d" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
+    CBlockIndex* pindexPrev = pindexBest;
+    if ((pindexPrev->nHeight >= (int) CUTOFF_POW_BLOCK) && (IsProofOfWork()))
+         return DoS(100, error("CheckBlock() : Proof of work (%f XST) on or after block %d.\n",
+                               ((double) vtx[0].GetValueOut() / (double) COIN), (int) CUTOFF_POW_BLOCK));
+
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -2217,6 +2222,16 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
         if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
             mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
+    }
+
+    CBlockLocator locator;
+    unsigned int nHeight = locator.GetBlockIndex()->nHeight;
+
+    if (pblock->IsProofOfWork() && (nHeight >= CUTOFF_POW_BLOCK)) {
+        if (pfrom)
+              pfrom->Misbehaving(100);
+        printf("Proof of work on or after block %d.\n", (int) CUTOFF_POW_BLOCK);
+        return error("Proof of work on or after block %d.\n", (int) CUTOFF_POW_BLOCK);
     }
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
@@ -2884,24 +2899,32 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrMe;
         CAddress addrFrom;
         uint64 nNonce = 1;
+        uint64 verification_token = 0;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
         if (pfrom->nVersion < MIN_PROTO_VERSION)
         {
-            // Since February 20, 2012, the protocol is initiated at version 209,
-            // and earlier versions are no longer supported
+            // disconnect from peers older than this proto version
             printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
             pfrom->fDisconnect = true;
             return false;
         }
-
+        
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (!vRecv.empty())
-            vRecv >> addrFrom >> nNonce;
-        if (!vRecv.empty())
+            vRecv >> addrFrom >> verification_token >> nNonce;
+        if (!vRecv.empty()) {
             vRecv >> pfrom->strSubVer;
+            pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
+        }
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
+        
+        // if (!vRecv.empty())
+        //     // set to true after we get the first filter* message
+        //     vRecv >> pfrom->fRelayTxes;
+        // else
+        //     pfrom->fRelayTxes = true;
 
         if (pfrom->fInbound && addrMe.IsRoutable())
         {
@@ -2936,7 +2959,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (!pfrom->fInbound)
         {
             // Advertise our address
-            if (!fNoListen && !IsInitialBlockDownload())
+            if (!IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom->addr);
                 if (addr.IsRoutable())
@@ -2951,11 +2974,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
             addrman.Good(pfrom->addr);
         } else {
-            if (((CNetAddr)pfrom->addr) == (CNetAddr)addrFrom)
+            addrFrom.SetPort(GetDefaultPort());
+            pfrom->addr = addrFrom;
+            if (CNode::IsBanned(addrFrom))
             {
-                addrman.Add(addrFrom, addrFrom);
-                addrman.Good(addrFrom);
+                printf("connection from %s dropped (banned)\n", addrFrom.ToString().c_str());
+                pfrom->fDisconnect = true;
+                return true;
             }
+            if (addrman.CheckVerificationToken(addrFrom, verification_token)) {
+                printf("connection from %s verified\n", addrFrom.ToString().c_str());
+                pfrom->fVerified = true;
+                addrman.Good(pfrom->addr);
+            } else {
+                printf("couldn't verify %s\n", addrFrom.ToString().c_str());
+                addrman.SetReconnectToken(addrFrom, verification_token);
+            }
+            
         }
 
         // Ask the first connected node for block updates
@@ -2986,7 +3021,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fSuccessfullyConnected = true;
 
-        printf("receive version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str());
+        printf("receive version message: %s: version %d, blocks=%d, us=%s, them=%s, peer=%s, verification=%" PRI64d "\n", pfrom->cleanSubVer.c_str(), pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str(), verification_token);
 
         cPeerBlockCounts.input(pfrom->nStartingHeight);
 
@@ -3513,9 +3548,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 bool ProcessMessages(CNode* pfrom)
 {
+    if (fDebug) {
+        printf("ProcessMessages: %s\n",
+               pfrom->addr.ToString().c_str());
+    }
     CDataStream& vRecv = pfrom->vRecv;
-    if (vRecv.empty())
+    if (vRecv.empty()) {
+        if (fDebug) {
+            printf("ProcessMessages: %s message empty\n",
+                   pfrom->addr.ToString().c_str());
+        }
         return true;
+    }
     //if (fDebug)
     //    printf("ProcessMessages(%u bytes)\n", vRecv.size());
 
@@ -3667,7 +3711,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                         pnode->setAddrKnown.clear();
 
                     // Rebroadcast our address
-                    if (!fNoListen)
+                    if (true)
                     {
                         CAddress addr = GetLocalAddress(&pnode->addr);
                         if (addr.IsRoutable())
@@ -3839,7 +3883,7 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 }
 
 // Some explaining would be appreciated
-// lel. no.
+// Trace the code.
 class COrphan
 {
 public:
@@ -3893,7 +3937,7 @@ public:
 };
 
 // CreateNewBlock:
-//  fProofOfStake: try (best effort (OdinStyle)) to make a proof-of-stake block
+//  fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
     CReserveKey reservekey(pwallet);

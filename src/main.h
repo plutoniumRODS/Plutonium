@@ -90,6 +90,8 @@ extern int64 nTransactionFee;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
 
+// Maximum age of a coin, to encourage open wallet (8 days)
+static const CBigNum MAX_COIN_SECONDS = 8 * 24 * 60 * 60;
 
 class CReserveKey;
 class CTxDB;
@@ -597,7 +599,7 @@ public:
     {
         // Large (in bytes) low-priority (new, small-coin) transactions
         // need a fee.
-        return dPriority > COIN * 2880 / 250;
+        return dPriority > COIN * 300 / 250;
     }
 
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK, unsigned int nBytes = 0) const;

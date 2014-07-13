@@ -25,7 +25,6 @@ class CBlockIndex;
 extern int nBestHeight;
 
 
-
 inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
@@ -36,10 +35,11 @@ void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, int64 nTimeout=0);
-void MapPort();
+void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
 void StartNode(void* parg);
+void StartTor(void* parg);
 bool StopNode();
 
 enum
@@ -112,8 +112,6 @@ enum threadId
 };
 
 extern bool fClient;
-extern bool fDiscover;
-extern bool fUseUPnP;
 extern uint64 nLocalServices;
 extern uint64 nLocalHostNonce;
 extern CAddress addrSeenByPeer;
@@ -139,7 +137,7 @@ public:
     int64 nTimeConnected;
     std::string addrName;
     int nVersion;
-    std::string strSubVer;
+    std::string cleanSubVer;
     bool fInbound;
     int64 nReleaseTime;
     int nStartingHeight;
@@ -171,10 +169,15 @@ public:
     std::string addrName;
     CService addrLocal;
     int nVersion;
-    std::string strSubVer;
+    // strSubVer is whatever byte array we read from the wire. However, this field is       intended 
+    // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
+    // store the sanitized version in cleanSubVer. The original should be used when dealing with
+    // the network or wire types and the cleaned string used when displayed or logged.
+    std::string strSubVer, cleanSubVer;
     bool fOneShot;
     bool fClient;
     bool fInbound;
+    bool fVerified;
     bool fNetworkNode;
     bool fSuccessfullyConnected;
     bool fDisconnect;
@@ -202,7 +205,7 @@ public:
     std::set<CAddress> setAddrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
-    uint256 hashCheckpointKnown; // Plutonium: known sent sync-checkpoint
+    uint256 hashCheckpointKnown; // ppcoin: known sent sync-checkpoint
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;
@@ -227,6 +230,7 @@ public:
         fOneShot = false;
         fClient = false; // set by version message
         fInbound = fInboundIn;
+        fVerified = false;
         fNetworkNode = false;
         fSuccessfullyConnected = false;
         fDisconnect = false;
@@ -243,6 +247,7 @@ public:
 
         // Be shy and don't send version until we hear
         if (!fInbound)
+            printf("CNode(): pfrom-addr %s\n", addrName.c_str());
             PushVersion();
     }
 
@@ -641,6 +646,13 @@ public:
     bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
     void copyStats(CNodeStats &stats);
 };
+
+
+
+
+
+
+
 
 
 

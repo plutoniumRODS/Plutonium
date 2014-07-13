@@ -27,6 +27,7 @@
 #include "rpcconsole.h"
 #include "wallet.h"
 #include "bitcoinrpc.h"
+#include "stealthsend.h"
 
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.hh"
@@ -194,8 +195,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
-    statusBar()->setObjectName("blueChipStatusBar");
-    statusBar()->setStyleSheet("#blueChipStatusBar { border-top-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #2A3029, stop:0.5 #6B7069, stop:1.0 #6B7069); border-top-width: 1px; border-top-style: inset; background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #A1B38F, stop:1.0 #4C5E41); color: #b2b2b2; } QToolTip { color: #efefef; background-color: #434343; border:0px;}");
+    statusBar()->setObjectName("plutoniumStatusBar");
+    statusBar()->setStyleSheet("#plutoniumStatusBar { border-top-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #2A3029, stop:0.5 #6B7069, stop:1.0 #6B7069); border-top-width: 1px; border-top-style: inset; background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 #A1B38F, stop:1.0 #4C5E41); color: #b2b2b2; } QToolTip { color: #efefef; background-color: #434343; border:0px;}");
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 

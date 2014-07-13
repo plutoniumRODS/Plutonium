@@ -43,7 +43,7 @@ void ThreadRPCServer3(void* parg);
 
 static inline unsigned short GetDefaultRPCPort()
 {
-    return GetBoolArg("-testnet", false) ? 25931 : 25932;
+    return GetBoolArg("-testnet", false) ? 24445 : 24444;
 }
 
 Object JSONRPCError(int code, const string& message)
@@ -734,7 +734,7 @@ void ThreadRPCServer2(void* parg)
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
-        string strWhatAmI = "To use Plutoniumd";
+        string strWhatAmI = "To use plutoniumd";
         if (mapArgs.count("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))

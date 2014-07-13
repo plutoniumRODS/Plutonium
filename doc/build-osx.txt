@@ -11,6 +11,13 @@ Mac OS X bitcoind build instructions
 Laszlo Hanyecz <solar@heliacal.net>
 Douglas Huff <dhuff@jrbobdobbs.org>
 
+These instructions are not complete and probably won't work.
+
+They will be ammneded in the future.
+
+Please read this if you are on 10.9:
+https://github.com/bitcoin/bitcoin/issues/3228
+
 
 See readme-qt.rst for instructions on building Bitcoin QT, the
 graphical user interface.
