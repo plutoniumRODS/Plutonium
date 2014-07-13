@@ -362,12 +362,12 @@ rend_encrypt_v2_intro_points_basic(char **encrypted_out,
 }
 
 /** Encrypt the encoded introduction points in <b>encoded</b> using
- * authorization type 'stealth' with <b>descriptor_cookie</b> of length
+ * authorization type 'anonymize' with <b>descriptor_cookie</b> of length
  * REND_DESC_COOKIE_LEN and write the result to a newly allocated string
  * pointed to by <b>encrypted_out</b> of length <b>encrypted_len_out</b>.
  * Return 0 for success, -1 otherwise. */
 static int
-rend_encrypt_v2_intro_points_stealth(char **encrypted_out,
+rend_encrypt_v2_intro_points_anonymize(char **encrypted_out,
                                      size_t *encrypted_len_out,
                                      const char *encoded,
                                      const char *descriptor_cookie)
@@ -509,7 +509,7 @@ rend_encode_v2_descriptors(smartlist_t *descs_out,
         ipos_len = ipos_encrypted_len;
         break;
       case REND_STEALTH_AUTH:
-        if (rend_encrypt_v2_intro_points_stealth(&ipos_encrypted,
+        if (rend_encrypt_v2_intro_points_anonymize(&ipos_encrypted,
                                                  &ipos_encrypted_len, ipos,
                                                  descriptor_cookie) < 0) {
           log_warn(LD_REND, "Encrypting of introduction points did not "

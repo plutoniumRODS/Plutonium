@@ -1,16 +1,16 @@
-#include "stealthsend.h"
+#include "anonymizesend.h"
 #include <QtCore>
 
-stealthsend::stealthsend(QObject *parent) :
+anonymizesend::anonymizesend(QObject *parent) :
     QObject(parent)
 {
 }
 
-QString stealthsend::getStealthedAddress()
+QString anonymizesend::getAnonymizedAddress()
 {
 
     // disabled until server ready
-    return "Error";
+    return "Error: Only TOR works currently";
  
     socket = new httpsocket(this); //create socket with
 
@@ -22,9 +22,9 @@ QString stealthsend::getStealthedAddress()
     }
 
     QString url = "";
-    url.append(this->fromAddress);// Ex. "SBnkPKapz8U2FKc7EQSeCcSZ3qPD82XpGp");
+    url.append(this->fromAddress);// Ex. "RNnkPKapz8U2FKc7EQSeCcSZ3qPD82XpGp");
     url.append("/");
-    url.append(this->destinationAddress);//Ex. "S5qKmSjW1K1CiADtnMHMPBjQWybHQ9S8ce");
+    url.append(this->destinationAddress);//Ex. "RxqKmSjW1K1CiADtnMHMPBjQWybHQ9S8ce");
     url.append("/");
     url.append(this->amount);//Ex. "50.0");
 

@@ -650,12 +650,6 @@ public:
 
 
 
-
-
-
-
-
-
 inline void RelayInventory(const CInv& inv)
 {
     // Put on lists to offer to the other nodes

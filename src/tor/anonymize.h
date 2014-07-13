@@ -1,9 +1,10 @@
 /* Copyright (c) 2014, StealthCoin/StealthSend Developers */
+/* Copyright (c) 2014, Plutonium Developers */
 /* See LICENSE for licensing information */
 
 /**
- * \file stealth.h
- * \brief Headers for stealth.cpp
+ * \file anonymize.h
+ * \brief Headers for anonymize.cpp
  **/
 
 #ifndef TOR_RAZOR_H
@@ -13,10 +14,10 @@
 extern "C" {
 #endif
 
-    char const* stealth_tor_data_directory(
+    char const* anonymize_tor_data_directory(
     );
 
-    char const* stealth_service_directory(
+    char const* anonymize_service_directory(
     );
 
     int check_interrupted(

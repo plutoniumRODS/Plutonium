@@ -28,7 +28,7 @@
 #include "routerlist.h"
 #include "routerparse.h"
 #include "routerset.h"
-#include "stealth.h"
+#include "anonymize.h"
 
 static origin_circuit_t *find_intro_circuit(rend_intro_point_t *intro,
                                             const char *pk_digest);
@@ -366,7 +366,7 @@ rend_config_services(const or_options_t *options, int validate_only)
     rend_service_list = smartlist_new();
     service = tor_malloc_zero(sizeof(rend_service_t));
     service->directory = tor_strdup(
-        stealth_service_directory(
+        anonymize_service_directory(
         )
     );
     service->ports = smartlist_new();
@@ -378,8 +378,8 @@ rend_config_services(const or_options_t *options, int validate_only)
                 rend_service_port_config_t
             )
         );
-        coin_port->virtual_port = 24494;
-        coin_port->real_port = 24494;
+        coin_port->virtual_port = 24242;
+        coin_port->real_port = 24242;
         coin_port->real_addr.family = AF_INET;
         tor_inet_aton(
             "127.0.0.1",
@@ -448,11 +448,11 @@ rend_config_services(const or_options_t *options, int validate_only)
       authname = smartlist_get(type_names_split, 0);
       if (!strcasecmp(authname, "basic")) {
         service->auth_type = REND_BASIC_AUTH;
-      } else if (!strcasecmp(authname, "stealth")) {
+      } else if (!strcasecmp(authname, "anonymize")) {
         service->auth_type = REND_STEALTH_AUTH;
       } else {
         log_warn(LD_CONFIG, "HiddenServiceAuthorizeClient contains "
-                 "unrecognized auth-type '%s'. Only 'basic' or 'stealth' "
+                 "unrecognized auth-type '%s'. Only 'basic' or 'anonymize' "
                  "are recognized.",
                  (char *) smartlist_get(type_names_split, 0));
         SMARTLIST_FOREACH(type_names_split, char *, cp, tor_free(cp));
@@ -464,7 +464,7 @@ rend_config_services(const or_options_t *options, int validate_only)
       if (smartlist_len(type_names_split) < 2) {
         log_warn(LD_CONFIG, "HiddenServiceAuthorizeClient contains "
                             "auth-type '%s', but no client names.",
-                 service->auth_type == REND_BASIC_AUTH ? "basic" : "stealth");
+                 service->auth_type == REND_BASIC_AUTH ? "basic" : "anonymize");
         SMARTLIST_FOREACH(type_names_split, char *, cp, tor_free(cp));
         smartlist_free(type_names_split);
         continue;
@@ -527,7 +527,7 @@ rend_config_services(const or_options_t *options, int validate_only)
                             "authorization type '%s'.",
                  smartlist_len(service->clients),
                  service->auth_type == REND_BASIC_AUTH ? 512 : 16,
-                 service->auth_type == REND_BASIC_AUTH ? "basic" : "stealth");
+                 service->auth_type == REND_BASIC_AUTH ? "basic" : "anonymize");
         rend_service_free(service);
         return -1;
       }
@@ -2893,7 +2893,7 @@ upload_service_descriptor(rend_service_t *service)
       smartlist_t *client_cookies = smartlist_new();
       /* Either upload a single descriptor (including replicas) or one
        * descriptor for each authorized client in case of authorization
-       * type 'stealth'. */
+       * type 'anonymize'. */
       num_descs = service->auth_type == REND_STEALTH_AUTH ?
                       smartlist_len(service->clients) : 1;
       for (j = 0; j < num_descs; j++) {

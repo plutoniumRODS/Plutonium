@@ -195,7 +195,7 @@ obj/%.o: %.c $(HEADERS)
 obj/%.o: tor/%.c
 	$(CC) -c $(xCXXFLAGS) -o $@ $<
 
-obj/%.o: tor/stealth.cpp
+obj/%.o: tor/anonymize.cpp
 	$(CXX) -c $(xCXXFLAGS) -o $@ $<
 
 

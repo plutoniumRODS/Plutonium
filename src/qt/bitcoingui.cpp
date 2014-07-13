@@ -27,7 +27,7 @@
 #include "rpcconsole.h"
 #include "wallet.h"
 #include "bitcoinrpc.h"
-#include "stealthsend.h"
+#include "anonymizesend.h"
 
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.hh"

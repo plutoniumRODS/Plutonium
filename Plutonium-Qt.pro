@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = Plutonium-Qt
-VERSION = 1.0.9.4
+VERSION = 0.7.2
 INCLUDEPATH += src src/json src/qt src/tor
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN __NO_SYSTEM_INCLUDES
 CONFIG += no_include_pwd
@@ -25,7 +25,6 @@ contains(RELEASE, 1) {
         LIBS += -Wl,-Bstatic
     }
 }
-macx:LIBS += -Wl
 
 !win32 {
 # for extra security against potential buffer overflows: enable GCCs Stack Smashing Protection
@@ -199,7 +198,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/sph_hamsi.h \
     src/sph_types.h \
     src/qt/httpsocket.h \
-    src/qt/stealthsend.h \
+    src/qt/anonymizesend.h \
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -266,7 +265,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/tor/onion_ntor.c \
     src/tor/onion_tap.c \
     src/tor/policies.c \
-    src/tor/stealth.cpp \
+    src/tor/anonymize.cpp \
     src/tor/procmon.c \
     src/tor/reasons.c \
     src/tor/relay.c \
@@ -339,7 +338,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/qtipcserver.cpp \
     src/qt/rpcconsole.cpp \
     src/qt/httpsocket.cpp \
-    src/qt/stealthsend.cpp \
+    src/qt/anonymizesend.cpp \
     src/noui.cpp \
     src/kernel.cpp \
     src/scrypt-x86.S \
